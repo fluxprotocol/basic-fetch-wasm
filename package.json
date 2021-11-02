@@ -1,0 +1,28 @@
+{
+  "name": "basic-fetch-wasm",
+  "version": "1.0.0",
+  "description": "WASM module for basic fetching of sources. This is used in the oracle validator node as default resolver. Currently it's the only resolver available, more to come later.",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fluxprotocol/basic-fetch-wasm.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/fluxprotocol/basic-fetch-wasm/issues"
+  },
+  "homepage": "https://github.com/fluxprotocol/basic-fetch-wasm#readme",
+  "devDependencies": {
+    "@types/jest": "^27.0.2",
+    "jest": "^27.3.1",
+    "ts-jest": "^27.0.7",
+    "typescript": "^4.4.4"
+  },
+  "dependencies": {
+    "@fluxprotocol/oracle-vm": "^2.0.0"
+  }
+}
