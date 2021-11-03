@@ -36,6 +36,7 @@ fn main() {
         let http_result = flux::http_call(&source.end_point, None);
 
         if http_result.is_err() {
+            println!("Could not fetch {}:{}", &source.end_point, &source.source_path);
             eprintln!("{}", http_result.unwrap_err().error);
             continue;
         }
@@ -52,9 +53,11 @@ fn main() {
         let unwrapped_finder = finder.unwrap();
         let found_values = unwrapped_finder.find();
         let result_value = match found_values.get(0) {
-                Some(val) => val,
-                None => panic!("Could not find: {}", source.source_path),
-            };
+            Some(val) => val,
+            None => panic!("Could not find: {}", source.source_path),
+        };
+
+        println!("Matching values found: {}", found_values.len());
 
         if sources_type == "string" {
             if found_values.len() > 1 {
@@ -83,12 +86,15 @@ fn main() {
                 val = Some(BigDecimal::from_str(&result_value.as_f64().unwrap().to_string()).unwrap());
             }
 
+            println!("url: {}, source: {}, result: {:?}", &source.end_point, &source.source_path, val);
+
             number_result = number_result.add(val.unwrap());
         }
 
         used_sources += 1;
     }
 
+    println!("used sources: {}/{}", &used_sources, sources.len());
     assert_ne!(used_sources, 0, "ERR_FAILING_SOURCES");
 
     if sources_type == "string" {

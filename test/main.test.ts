@@ -59,7 +59,7 @@ describe('Process', () => {
 
         const outcome = JSON.parse(result.logs[result.logs.length - 1]);
 
-        expect(result.gasUsed).toBe('633421244');
+        expect(result.gasUsed).toBe('636524418');
         expect(outcome.value).toBe('70500');
     });
 
@@ -87,7 +87,7 @@ describe('Process', () => {
         const outcome = JSON.parse(result.logs[result.logs.length - 1]);
 
         expect(outcome.value).toBe('641802');
-        expect(result.gasUsed).toBe('16883963');
+        expect(result.gasUsed).toBe('19729895');
     });
 
     it('should execute the simple-call-url and combine numbers with a big multiplier', async () => {
@@ -117,7 +117,7 @@ describe('Process', () => {
 
         const outcome = JSON.parse(result.logs[result.logs.length - 1]);
 
-        expect(result.gasUsed).toBe('633132602');
+        expect(result.gasUsed).toBe('636255400');
         expect(outcome.value).toBe('705000000000000000000000000');
     });
 
@@ -142,8 +142,10 @@ describe('Process', () => {
             timestamp: new Date().getTime(),
         }, memoryCache);
 
+        console.log('[] result -> ', result);
+
         const outcome = JSON.parse(result.logs[result.logs.length - 1]);
-        expect(result.gasUsed).toBe('23255977');
+        expect(result.gasUsed).toBe('26567314');
         expect(outcome.value).toBe('493625367592069900000000000000');
     });
 
@@ -208,7 +210,7 @@ describe('Process', () => {
         const result = await execute(context, memoryCache);
         const outcome = JSON.parse(result.logs[result.logs.length - 1]);
 
-        expect(result.gasUsed).toBe('661357197');
+        expect(result.gasUsed).toBe('660076544');
         expect(outcome.value).toBe('2000');
     });
 });
