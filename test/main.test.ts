@@ -59,7 +59,7 @@ describe('Process', () => {
 
         const outcome = JSON.parse(result.logs[result.logs.length - 1]);
 
-        expect(result.gasUsed).toBe('636524418');
+        expect(result.gasUsed).toBe('662661840');
         expect(outcome.value).toBe('70500');
     });
 
@@ -87,7 +87,7 @@ describe('Process', () => {
         const outcome = JSON.parse(result.logs[result.logs.length - 1]);
 
         expect(outcome.value).toBe('641802');
-        expect(result.gasUsed).toBe('19729895');
+        expect(result.gasUsed).toBe('19740675');
     });
 
     it('should execute the simple-call-url and combine numbers with a big multiplier', async () => {
@@ -117,7 +117,7 @@ describe('Process', () => {
 
         const outcome = JSON.parse(result.logs[result.logs.length - 1]);
 
-        expect(result.gasUsed).toBe('636255400');
+        expect(result.gasUsed).toBe('662391891');
         expect(outcome.value).toBe('705000000000000000000000000');
     });
 
@@ -145,7 +145,7 @@ describe('Process', () => {
         console.log('[] result -> ', result);
 
         const outcome = JSON.parse(result.logs[result.logs.length - 1]);
-        expect(result.gasUsed).toBe('26567314');
+        expect(result.gasUsed).toBe('26578020');
         expect(outcome.value).toBe('493625367592069900000000000000');
     });
 
@@ -210,7 +210,70 @@ describe('Process', () => {
         const result = await execute(context, memoryCache);
         const outcome = JSON.parse(result.logs[result.logs.length - 1]);
 
-        expect(result.gasUsed).toBe('660076544');
+        expect(result.gasUsed).toBe('686577520');
         expect(outcome.value).toBe('2000');
+    });
+
+
+    it('Should multiply on a per source basis', async () => {
+        const wasm = readFileSync(WASM_LOCATION);
+        const context: Context = {
+            args: [
+                '0xdeadbeef',
+                JSON.stringify([
+                    {
+                        end_point: 'https://pokeapi.co/api/v2/pokemon/ditto',
+                        source_path: '$..abilities[-1:].slot',
+                        multiplier: '100'
+                    },
+                ]),
+                'number',
+                (1).toString(),
+            ],
+            binary: new Uint8Array(wasm),
+            env: {},
+            gasLimit: (300_000_000_000_000).toString(),
+            randomSeed: '0x012',
+            timestamp: new Date().getTime()
+        };
+
+        const result = await execute(context, memoryCache);
+        const outcome = JSON.parse(result.logs[result.logs.length - 1]);
+
+        expect(outcome.value).toBe('300');
+    });
+
+    it('Should multiply on a per source basis combined with different multiplier', async () => {
+        const wasm = readFileSync(WASM_LOCATION);
+        const context: Context = {
+            args: [
+                '0xdeadbeef',
+                JSON.stringify([
+                    {
+                        end_point: 'https://pokeapi.co/api/v2/pokemon/ditto',
+                        source_path: '$..abilities[-1:].slot',
+                        multiplier: '100'
+                    },
+                    {
+                        end_point: 'https://pokeapi.co/api/v2/pokemon/ditto',
+                        // source_path: 'abilities[$$last].slot',
+                        source_path: '$..abilities[-1:].slot',
+                        multiplier: '1000',
+                    },
+                ]),
+                'number',
+                (10).toString(),
+            ],
+            binary: new Uint8Array(wasm),
+            env: {},
+            gasLimit: (300_000_000_000_000).toString(),
+            randomSeed: '0x012',
+            timestamp: new Date().getTime()
+        };
+
+        const result = await execute(context, memoryCache);
+        const outcome = JSON.parse(result.logs[result.logs.length - 1]);
+
+        expect(outcome.value).toBe('16500');
     });
 });

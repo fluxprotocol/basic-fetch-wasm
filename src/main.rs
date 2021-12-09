@@ -12,6 +12,7 @@ mod flux;
 struct Source {
     end_point: String,
     source_path: String,
+    multiplier: Option<String>
 }
 
 fn main() {
@@ -85,6 +86,11 @@ fn main() {
             } else if result_value.is_f64() {
                 val = Some(BigDecimal::from_str(&result_value.as_f64().unwrap().to_string()).unwrap());
             }
+
+            val = match &source.multiplier {
+                Some(multiplier) => Some(BigDecimal::from_str(&multiplier).unwrap().mul(val.unwrap())),
+                None => val,
+            };
 
             println!("url: {}, source: {}, result: {:?}", &source.end_point, &source.source_path, val);
 
