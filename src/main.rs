@@ -5,6 +5,7 @@ use jsonpath_rust::JsonPathFinder;
 use bigdecimal::{ BigDecimal };
 use std::str::{ FromStr };
 use std::ops::{ Add, Div, Mul };
+use std::collections::HashMap;
 
 mod flux;
 
@@ -12,7 +13,11 @@ mod flux;
 struct Source {
     end_point: String,
     source_path: String,
-    multiplier: Option<String>
+    source_parse_as: Option<String>,
+    multiplier: Option<String>,
+    http_method: Option<String>,
+    http_headers: Option<HashMap<String, String>>,
+    http_body: Option<String>,
 }
 
 fn main() {
@@ -34,10 +39,14 @@ fn main() {
     }
 
     for source in sources.iter() {
-        let http_result = flux::http_call(&source.end_point, None);
+        let http_result = flux::http_call(&source.end_point, Some(flux::HttpCallOptions {
+            method: source.http_method.clone(),
+            body: source.http_body.clone(),
+            headers: source.http_headers.clone(),
+        }));
 
         if http_result.is_err() {
-            println!("Could not fetch {}:{}", &source.end_point, &source.source_path);
+            println!("Could not fetch {}:{}:{:?}", &source.end_point, &source.source_path, &source.http_headers);
             eprintln!("{}", http_result.unwrap_err().error);
             continue;
         }
@@ -55,7 +64,10 @@ fn main() {
         let found_values = unwrapped_finder.find();
         let result_value = match found_values.get(0) {
             Some(val) => val,
-            None => panic!("Could not find: {}", source.source_path),
+            None => {
+                eprintln!("Could not find: {}, skipping api source", source.source_path);
+                continue;
+            }
         };
 
         println!("Matching values found: {}", found_values.len());

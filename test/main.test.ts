@@ -59,7 +59,6 @@ describe('Process', () => {
 
         const outcome = JSON.parse(result.logs[result.logs.length - 1]);
 
-        expect(result.gasUsed).toBe('662661840');
         expect(outcome.value).toBe('70500');
     });
 
@@ -87,7 +86,6 @@ describe('Process', () => {
         const outcome = JSON.parse(result.logs[result.logs.length - 1]);
 
         expect(outcome.value).toBe('641802');
-        expect(result.gasUsed).toBe('19740675');
     });
 
     it('should execute the simple-call-url and combine numbers with a big multiplier', async () => {
@@ -117,7 +115,6 @@ describe('Process', () => {
 
         const outcome = JSON.parse(result.logs[result.logs.length - 1]);
 
-        expect(result.gasUsed).toBe('662391891');
         expect(outcome.value).toBe('705000000000000000000000000');
     });
 
@@ -142,10 +139,7 @@ describe('Process', () => {
             timestamp: new Date().getTime(),
         }, memoryCache);
 
-        console.log('[] result -> ', result);
-
         const outcome = JSON.parse(result.logs[result.logs.length - 1]);
-        expect(result.gasUsed).toBe('26578020');
         expect(outcome.value).toBe('493625367592069900000000000000');
     });
 
@@ -210,7 +204,6 @@ describe('Process', () => {
         const result = await execute(context, memoryCache);
         const outcome = JSON.parse(result.logs[result.logs.length - 1]);
 
-        expect(result.gasUsed).toBe('686577520');
         expect(outcome.value).toBe('2000');
     });
 
@@ -275,5 +268,83 @@ describe('Process', () => {
         const outcome = JSON.parse(result.logs[result.logs.length - 1]);
 
         expect(outcome.value).toBe('16500');
+    });
+
+    it('Should be able to do RPC calls', async () => {
+        const wasm = readFileSync(WASM_LOCATION);
+        const context: Context = {
+            args: [
+                '0xdeadbeef',
+                JSON.stringify([
+                    {
+                        end_point: 'https://rpc.mainnet.near.org',
+                        source_path: '$.result.result',
+                        http_method: 'POST',
+                        http_headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        http_body: JSON.stringify({
+                            jsonrpc: '2.0',
+                            id: 'dontcare',
+                            method: 'query',
+                            params: {
+                                request_type: 'call_function',
+                                finality: 'final',
+                                account_id: 'meta-pool.near',
+                                method_name: 'get_contract_state',
+                                args_base64: 'e30=',
+                            },
+                        }),
+                    },
+                ]),
+                'string',
+                // (10).toString(),
+            ],
+            binary: new Uint8Array(wasm),
+            env: {},
+            gasLimit: (300_000_000_000_000).toString(),
+            randomSeed: '0x012',
+            timestamp: new Date().getTime()
+        };
+
+        const result = await execute(context, memoryCache);
+        const outcome = JSON.parse(result.logs[result.logs.length - 1]);
+
+        expect(outcome.value.startsWith('[')).toBe(true);
+    });
+
+
+    it('Should continue even though the source path does not exists', async () => {
+        const wasm = readFileSync(WASM_LOCATION);
+        const context: Context = {
+            args: [
+                '0xdeadbeef',
+                JSON.stringify([
+                    {
+                        end_point: 'https://pokeapi.co/api/v2/pokemon/ditto',
+                        source_path: '$..nahnotme[-1:].idonotexist',
+                        multiplier: '100'
+                    },
+                    {
+                        end_point: 'https://pokeapi.co/api/v2/pokemon/ditto',
+                        source_path: '$..abilities[-1:].slot',
+                        multiplier: '1000',
+                    },
+                ]),
+                'number',
+                (10).toString(),
+            ],
+            binary: new Uint8Array(wasm),
+            env: {},
+            gasLimit: (300_000_000_000_000).toString(),
+            randomSeed: '0x012',
+            timestamp: new Date().getTime()
+        };
+
+        const result = await execute(context, memoryCache);
+        const outcome = JSON.parse(result.logs[result.logs.length - 1]);
+
+        expect(result.logs[3]).toBe('used sources: 1/2');
+        expect(outcome.value).toBe('30000');
     });
 });
