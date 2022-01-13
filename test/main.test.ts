@@ -347,4 +347,44 @@ describe('Process', () => {
         expect(result.logs[3]).toBe('used sources: 1/2');
         expect(outcome.value).toBe('30000');
     });
+
+    it('Should be able to query a subgraph', async () => {
+        const wasm = readFileSync(WASM_LOCATION);
+        const context: Context = {
+            args: [
+                '0xdeadbeef',
+                JSON.stringify([
+                    {
+                        end_point: 'https://api.thegraph.com/subgraphs/name/jamesondh/flux-nft-bridge',
+                        source_path: '$.data.erc721Vaults[0].ownerNear',
+                        http_method: 'POST',
+                        http_headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        http_body: JSON.stringify({
+                            'query': `{
+                                erc721Vaults(where: {id: "0xb0391160bbf2deebba7669259861865adb7cb48a883f0d9567b8907485d1fc05"}) {
+                                  ownerNear
+                                }
+                              }`,
+                            'variables': {}, 
+                        }),
+                    },
+                ]),
+                'string',
+                // (10).toString(),
+            ],
+            binary: new Uint8Array(wasm),
+            env: {},
+            gasLimit: (300_000_000_000_000).toString(),
+            randomSeed: '0x012',
+            timestamp: new Date().getTime()
+        };
+
+        const result = await execute(context, memoryCache);
+        const outcome = JSON.parse(result.logs[result.logs.length - 1]);
+
+
+        expect(outcome.value).toBe('test.near');
+    });
 });
